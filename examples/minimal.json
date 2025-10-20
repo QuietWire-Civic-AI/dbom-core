@@ -1,18 +1,16 @@
 {
   "type": "attestation",
-  "subject": {
-    "artifact": { "purl": "pkg:npm/example@1.0.0" }
-  },
+  "subject": { "artifact": { "purl": "pkg:npm/demo@1.0.0" } },
   "claims": [
-    {
-      "predicate": "contains",
-      "object": { "purl": "pkg:npm/dep@2.0.0" },
-      "label": "Observed",
-      "confidence": 0.9
-    }
+    { "predicate": "contains", "object": { "purl": "pkg:npm/dep@2.0.0" }, "label": "Observed", "confidence": 0.9 }
   ],
   "provenance": {
-    "issuer": "did:example:quietwire",
-    "issued": "2025-10-20T00:00:00Z"
+    "issuer": "QuietWire DBoM demo",
+    "issued": "2025-01-01T00:00:00Z",
+    "source": "unit-test",
+    "time": "2025-01-01T00:00:00Z",
+    "method": "manual",
+    "uncertainty": 0,
+    "reviewer": "n/a"
   }
 }

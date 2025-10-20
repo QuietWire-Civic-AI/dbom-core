@@ -59,6 +59,8 @@ function spdxToDbom(spdx) {
       confidence: 0.9
     }],
     provenance: {
+      issuer: "QuietWire Transparency Exchange",
+      issued: new Date().toISOString(),
       source: "spdx:2.3",
       time: new Date().toISOString(),
       method: "converter:spdx->dbom",
