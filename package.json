@@ -9,12 +9,15 @@
     "validate": "ajv validate -s schema/dbom-v0.schema.json -d 'examples/*.json' --spec=draft2020 -c ajv-formats",
     "dbom:validate": "node scripts/dbom.mjs validate",
     "dbom:query": "node scripts/dbom.mjs query",
-    "spdx2dbom": "node scripts/interop-spdx.mjs"
+    "spdx2dbom": "node scripts/interop-spdx.mjs",
+    "start": "node server/index.mjs"
   },
   "type": "module",
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
     "minimist": "^1.2.8"
   }
 }
