@@ -3,7 +3,6 @@ import bodyParser from "body-parser";
 import fs from "fs/promises";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
-import meta2020 from "ajv/dist/refs/json-schema-2020-12.json" assert { type: "json" };
 
 const SCHEMA_ID = "https://quietwire.ai/dbom/v0/schema";
 
