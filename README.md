@@ -1,21 +1,42 @@
-# DBoM Core
+# DBoM Core (Transparency Exchange)
 
-Foundational spec, schemas, and minimal reference implementations for
-**Distributed Bill of Materials** (DBoM): evidence-carrying provenance,
-lifecycle attestations, and query interfaces.
+Minimal, format-neutral API for evidence-carrying attestations.
+It validates and answers questions regardless of input format (SPDX, CycloneDX, CSAF, etc.).
 
-## Scope
-- Canonical terms & data model (spec/)
-- JSON Schemas (schema/) with examples (examples/)
-- Reference implementations (reference-impl/, cli/, server/)
-- Interop bridges (SPDX, CSAF, OpenEOX, CLE)
-- Test corpus (tests/) and conformance checks
+## Quickstart
 
-## Design goals
-- **Evidence-first**: every claim must cite source, time, method, uncertainty, reviewer
-- **Format-agnostic interop** via adapters (SPDX, CycloneDX, CSAF, OpenEOX)
-- **Query-ready**: align with Transparency/Attestation APIs (procurement & PLM)
-- **Time-series** lifecycle: versioning, renames, EOL/EOS, support windows
+```bash
+npm i
+npm run start             # -> 🌐 http://localhost:8787
+```
+
+## CLI (optional)
+
+```bash
+npm run dbom:validate     # validates examples/*.json
+```
+
+## API
+
+* `GET /version` → `{ name, schema }`
+* `POST /validate` body: DBoM JSON → `{ valid, errors }`
+* `POST /query?predicate=...` body: DBoM JSON → `{ count, claims:[...] }`
+* `POST /convert/spdx` body: SPDX 2.3 JSON → `{ attestation, valid, errors }`
+
+### Demo
+
+```bash
+curl -s http://localhost:8787/version | jq
+curl -s -X POST http://localhost:8787/validate -H 'content-type: application/json' --data-binary @examples/minimal.json | jq
+curl -s -X POST "http://localhost:8787/query?predicate=contains" -H 'content-type: application/json' --data-binary @examples/minimal.json | jq
+curl -s -X POST http://localhost:8787/convert/spdx -H 'content-type: application/json' --data-binary @examples/spdx23.json | jq
+```
+
+## Spec & Schema
+
+* Spec: [`spec/00-index.md`](spec/00-index.md)
+* Schema: [`schema/dbom-v0.schema.json`](schema/dbom-v0.schema.json)
 
 ## License
-Apache-2.0 (see LICENSE)
+
+Apache-2.0
