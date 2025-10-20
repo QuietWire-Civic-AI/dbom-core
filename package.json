@@ -2,7 +2,8 @@
   "name": "dbom-core",
   "private": true,
   "devDependencies": {
-    "ajv-cli": "^5.0.0"
+    "ajv-cli": "^5.0.0",
+    "ajv-formats": "^3.0.1"
   },
   "scripts": {
     "validate": "ajv validate -s schema/dbom-v0.schema.json -d 'examples/*.json' --spec=draft2020 -c ajv-formats"
