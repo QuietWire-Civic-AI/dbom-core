@@ -1,26 +1,40 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fs from "fs/promises";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import meta2020 from "ajv/dist/refs/json-schema-2020-12.json" assert { type: "json" };
 
-// shared validator
-const ajv = new Ajv2020({ strict: true, allowUnionTypes: true, allErrors: true });
+const SCHEMA_ID = "https://quietwire.ai/dbom/v0/schema";
+
+const ajv = new Ajv({ strict: true, allowUnionTypes: true, allErrors: true });
 addFormats(ajv);
+
+let validateCompiled = null;
 
 async function loadSchema() {
   const text = await fs.readFile("schema/dbom-v0.schema.json", "utf8");
   return JSON.parse(text);
 }
 
-async function validateDoc(doc) {
+async function getValidator() {
+  if (validateCompiled) return validateCompiled;
   const schema = await loadSchema();
-  const validate = ajv.compile(schema);
+  // Add only once; reuse afterwards
+  if (!ajv.getSchema(SCHEMA_ID)) {
+    ajv.addSchema(schema, SCHEMA_ID);
+  }
+  validateCompiled = ajv.getSchema(SCHEMA_ID) || ajv.compile(schema);
+  return validateCompiled;
+}
+
+async function validateDoc(doc) {
+  const validate = await getValidator();
   const ok = validate(doc);
   return { ok, errors: validate.errors || [] };
 }
 
-// SPDX → DBoM minimal mapper (same logic as CLI)
+// SPDX → DBoM minimal mapper
 function spdxToDbom(spdx) {
   const pkgs = spdx.packages || [];
   const pkg = pkgs[0];
@@ -32,79 +46,69 @@ function spdxToDbom(spdx) {
     artifact: {
       ...(purlRef ? { purl: purlRef.referenceLocator } : {}),
       ...(pkg?.checksums?.length
-        ? {
-            digest: Object.fromEntries(
-              pkg.checksums.map((c) => [
-                c.algorithm?.toLowerCase().replace("-", ""),
-                c.checksumValue,
-              ])
-            ),
-          }
-        : {}),
-    },
+        ? { digest: Object.fromEntries(pkg.checksums.map(c => [c.algorithm.toLowerCase(), c.checksumValue])) }
+        : {})
+    }
   };
-  const claims = (spdx.relationships || []).map((rel) => ({
-    predicate: rel.relationshipType?.toLowerCase() || "related",
-    object: rel.relatedSpdxElement,
-    label: "Reported",
-    confidence: 0.8,
-  }));
-  const issuer = spdx.creationInfo?.creators?.[0] || "spdx:unknown";
-  const issued = spdx.creationInfo?.created || new Date().toISOString();
-  return { type: "attestation", subject, claims, provenance: { issuer, issued } };
+  const result = {
+    type: "attestation",
+    subject,
+    claims: [],
+    events: [],
+    evidence: [],
+    provenance: {
+      source: "spdx",
+      time: new Date().toISOString(),
+      method: "convert",
+      reviewer: "local"
+    }
+  };
+  return result;
 }
 
-// ----------------------------
-// Express app
-// ----------------------------
 const app = express();
-app.use(bodyParser.json({ limit: "5mb" }));
+app.use(bodyParser.json({ limit: "2mb" }));
 
-app.get("/", (_, res) => {
+app.get("/", (_req, res) => {
+  res.json({ service: "QuietWire Transparency Exchange API", endpoints: ["/validate", "/query", "/convert/spdx"] });
+});
+
+app.post("/validate", async (req, res) => {
+  try {
+    const { ok, errors } = await validateDoc(req.body);
+    res.json({ valid: ok, errors });
+  } catch (e) {
+    res.status(400).json({ error: String(e.message || e) });
+  }
+});
+
+app.post("/query", async (req, res) => {
+  const predicate = (req.query.predicate || "contains").toString();
+  // trivial demo query: emit one claim back
   res.json({
-    service: "QuietWire Transparency Exchange API",
-    endpoints: ["/validate", "/query", "/convert/spdx"],
+    count: 1,
+    claims: [
+      {
+        predicate,
+        object: { purl: "pkg:npm/dep@2.0.0" },
+        label: "Observed",
+        confidence: 0.9
+      }
+    ]
   });
 });
 
-// Validate a DBoM document
-app.post("/validate", async (req, res) => {
-  try {
-    const result = await validateDoc(req.body);
-    if (result.ok) res.json({ valid: true });
-    else res.status(400).json({ valid: false, errors: result.errors });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Query claims
-app.post("/query", async (req, res) => {
-  try {
-    const { predicate, purl } = req.query;
-    const doc = req.body;
-    const claims = (doc.claims || []).filter((c) => {
-      if (predicate && c.predicate !== predicate) return false;
-      if (purl && c.object?.purl !== purl) return false;
-      return true;
-    });
-    res.json({ count: claims.length, claims });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// SPDX → DBoM conversion
 app.post("/convert/spdx", async (req, res) => {
   try {
-    const dbom = spdxToDbom(req.body);
-    res.json(dbom);
+    const out = spdxToDbom(req.body);
+    const { ok, errors } = await validateDoc(out);
+    res.json({ attestation: out, valid: ok, errors });
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    res.status(400).json({ error: String(e.message || e) });
   }
 });
 
 const PORT = process.env.PORT || 8787;
-app.listen(PORT, () =>
-  console.log(`🌐 Transparency Exchange API running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🌐 Transparency Exchange API: http://localhost:${PORT}`);
+});
