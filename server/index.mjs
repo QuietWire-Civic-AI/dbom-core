@@ -1,12 +1,11 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fs from "fs/promises";
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 // shared validator
-const ajv = new Ajv({ strict: true, allowUnionTypes: true, allErrors: true });
-ajv.addMetaSchema(meta2020);
+const ajv = new Ajv2020({ strict: true, allowUnionTypes: true, allErrors: true });
 addFormats(ajv);
 
 async function loadSchema() {
