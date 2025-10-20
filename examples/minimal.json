@@ -1,0 +1,29 @@
+{
+  "type": "dbom.attestation",
+  "id": "att-01",
+  "version": "0.1",
+  "issued": "2025-10-20T12:00:00Z",
+  "issuer": { "id": "mailto:lumina@quietwire.ai", "name": "Lumina Withwire" },
+  "subject": { "id": "pkg:pypi/example@1.2.3", "digest": { "sha256": "deadbeef" } },
+  "statements": [
+    {
+      "subject": { "id": "pkg:pypi/example@1.2.3" },
+      "predicate": "support_until",
+      "object": "2026-12-31",
+      "label": "Reported",
+      "confidence": 0.9,
+      "evidence": {
+        "source": "https://vendor.example.com/lifecycle",
+        "time": "2025-10-01T00:00:00Z",
+        "method": "policy page capture",
+        "uncertainty": 0.1
+      },
+      "event": {
+        "id": "evt-001",
+        "type": "support_window",
+        "time": "2025-10-01T00:00:00Z",
+        "details": { "from": "2024-01-01", "to": "2026-12-31" }
+      }
+    }
+  ]
+}

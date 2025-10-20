@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quietwire.ai/schema/dbom-v0.schema.json",
+  "title": "DBoM Core v0",
+  "type": "object",
+  "required": ["type","id","version","issued","issuer","statements"],
+  "properties": {
+    "type": { "const": "dbom.attestation" },
+    "id":   { "type": "string", "pattern": "^[a-zA-Z0-9._:-]{6,}$" },
+    "version": { "type": "string", "pattern": "^0\\.[0-9]+(\\.[0-9]+)?$" },
+    "issued":  { "type": "string", "format": "date-time" },
+    "issuer":  { "$ref": "#/$defs/entityRef" },
+    "subject": { "$ref": "#/$defs/artifactRef" },
+    "statements": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "signatures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/signature" }
+    }
+  },
+  "$defs": {
+    "entityRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },        // did:*, uri, email, etc.
+        "name": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "artifactRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },        // purl, uri, spdxid, etc.
+        "digest": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["source","time","method"],
+      "properties": {
+        "source": { "type": "string" },    // url, doc hash, sensor id
+        "time":   { "type": "string", "format": "date-time" },
+        "method": { "type": "string" },
+        "uncertainty": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reviewer": { "$ref": "#/$defs/entityRef" }
+      },
+      "additionalProperties": false
+    },
+    "claim": {
+      "type": "object",
+      "required": ["subject","predicate","label"],
+      "properties": {
+        "subject": { "$ref": "#/$defs/artifactRef" },
+        "predicate": { "type": "string" },       // e.g., "contains", "version", "support_until"
+        "object": {},
+        "label": { "enum": ["Observed","Measured","Reported","Inferred"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "event": { "$ref": "#/$defs/event" }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": ["type","time","id"],
+      "properties": {
+        "id":   { "type": "string" },
+        "type": { "enum": ["release","rename","eol","eos","ownership_change","vuln","fix","support_window"] },
+        "time": { "type": "string", "format": "date-time" },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "signature": {
+      "type": "object",
+      "properties": {
+        "alg": { "type": "string" },       // jws|cose|dsse, etc.
+        "keyid": { "type": "string" },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
