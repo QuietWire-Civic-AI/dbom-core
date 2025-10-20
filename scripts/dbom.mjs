@@ -2,8 +2,10 @@ import fs from 'fs/promises';
 import minimist from 'minimist';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import meta2020 from 'ajv/dist/refs/json-schema-2020-12.json' assert { type: 'json' };
 
 const ajv = new Ajv({ strict: true, allowUnionTypes: true, allErrors: true });
+ajv.addMetaSchema(meta2020);
 addFormats(ajv);
 
 async function loadJSON(p){ return JSON.parse(await fs.readFile(p,'utf8')); }

@@ -6,6 +6,7 @@ import addFormats from "ajv-formats";
 
 // shared validator
 const ajv = new Ajv({ strict: true, allowUnionTypes: true, allErrors: true });
+ajv.addMetaSchema(meta2020);
 addFormats(ajv);
 
 async function loadSchema() {
