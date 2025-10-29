@@ -1,0 +1,19 @@
+{
+  "type": "event-attestation",
+  "id": "att-2025-10-27-lf-sbom",
+  "subject": "LF S-BOM Coffee Call presentation",
+  "timestamp": "2025-10-27T00:00:00Z",
+  "presenter": "Chris Blask",
+  "materials": {
+    "slides_sha256": "<SLIDES_SHA256>",
+    "repos": [
+      "dbom-core-main",
+      "sbom-attestation-demo"
+    ]
+  },
+  "links": {
+    "canon": "Attestations/Events/2025-10-27_LF_SBOM_Talk.md",
+    "cap": "evidence://EV-2025-XXX"
+  },
+  "signature": "<to-fill>"
+}
